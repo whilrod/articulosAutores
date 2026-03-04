@@ -77,6 +77,14 @@ func (h *ArticuloHandler) PublicarArticulo(c *gin.Context) {
 		})
 		return
 	}
+	// Primero, verificar si el artículo existe
+	_, err = h.repo.GetByID(c.Request.Context(), id)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{
+			"error": "Artículo no encontrado",
+		})
+		return
+	}
 	articulo, err := h.repo.Publicar(c.Request.Context(), id)
 	if err != nil {
 		if err.Error() == "el artículo debe tener mínimo 120 palabras" ||
