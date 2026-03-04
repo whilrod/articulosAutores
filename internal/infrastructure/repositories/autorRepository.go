@@ -142,3 +142,43 @@ func (a *AutorRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	}
 	return nil
 }
+
+// devuelve una lista paginada de autores
+func (r *AutorRepository) List(ctx context.Context, limit, offset int) ([]*domain.Autor, int64, error) {
+	var total int64
+	countQuery := `SELECT COUNT(*) FROM autores`
+	err := r.db.QueryRowContext(ctx, countQuery).Scan(&total)
+	if err != nil {
+		return nil, 0, fmt.Errorf("error al contar autores: %w", err)
+	}
+	query := `SELECT id, nombre, email, bio, fecha_registro, created_at, updated_at FROM autores ORDER BY nombre LIMIT ? OFFSET ?`
+	rows, err := r.db.QueryContext(ctx, query, limit, offset)
+	if err != nil {
+		return nil, 0, fmt.Errorf("error al listar autores: %w", err)
+	}
+	defer rows.Close()
+	var autores []*domain.Autor
+	for rows.Next() {
+		var autor domain.Autor
+		var bio sql.NullString
+		var idStr string
+		err := rows.Scan(
+			&idStr,
+			&autor.Nombre,
+			&autor.Email,
+			&bio,
+			&autor.FechaRegistro,
+			&autor.CreatedAt,
+			&autor.UpdatedAt,
+		)
+		if err != nil {
+			return nil, 0, fmt.Errorf("error al escanear autor: %w", err)
+		}
+		autor.ID = uuid.MustParse(idStr)
+		if bio.Valid {
+			autor.Bio = bio.String
+		}
+		autores = append(autores, &autor)
+	}
+	return autores, total, nil
+}
