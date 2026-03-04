@@ -14,7 +14,7 @@ type ArticuloRepository struct {
 	db *sql.DB
 }
 
-func NeWArticuloRepository(db *sql.DB) *ArticuloRepository {
+func NewArticuloRepository(db *sql.DB) *ArticuloRepository {
 	return &ArticuloRepository{db: db}
 }
 
